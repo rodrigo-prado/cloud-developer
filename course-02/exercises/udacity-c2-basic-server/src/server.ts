@@ -4,15 +4,15 @@ import bodyParser from 'body-parser';
 import { Car, cars as cars_list } from './cars';
 
 (async () => {
-  let cars:Car[]  = cars_list;
+  let cars:Car[] = cars_list;
 
-  //Create an express applicaiton
+  // Create an express applicaiton
   const app = express(); 
-  //default port to listen
+  // default port to listen
   const port = 8082; 
   
-  //use middleware so post bodies 
-  //are accessable as req.body.{{variable}}
+  // use middleware so post bodies 
+  // are accessable as req.body.{{variable}}
   app.use(bodyParser.json()); 
 
   // Root URI call
@@ -70,13 +70,124 @@ import { Car, cars as cars_list } from './cars';
 
   // @TODO Add an endpoint to GET a list of cars
   // it should be filterable by make with a query paramater
+  app.get( "/cars/", ( req: Request, res: Response ) => {
+    // destruct our query parameter
+    let { make } = req.query;
+
+    let cars_list = cars;
+
+    // if we have an optional query parameter, filter by it
+    if (make) {
+      cars_list = cars.filter((car) => car.make === make);
+    }
+
+    return res.status(200)
+              .send(cars_list);
+    // return res.status(200)
+    //             .send(`car[id: ` + cars[id].id 
+    //       + `, make: ` + cars[id].make 
+    //       + `, model: ` + cars[id].model
+    //       + `, type: ` + cars[id].type
+    //       + `, cost: ` + cars[id].cost
+    //       + `]`);
+  } );
 
   // @TODO Add an endpoint to get a specific car
   // it should require id
   // it should fail gracefully if no matching car is found
+  app.get( "/cars/:id", ( req: Request, res: Response ) => {
+    // destruct our path params
+    let { id } = req.params;
+
+    // check to make sure the id is set
+    if ( !id ) {
+      return res.status(400).send(`id is required`);
+    }
+    
+    // try to find the car by id
+    const car = cars.filter((car) => car.id == id);
+
+    // respond not found, if we do not have this id
+    if (car && car.length === 0) {
+      return res.status(404).send(`car is not found`);
+    }
+
+    // return the car with a success status code
+    res.status(200).send(car);
+
+    // if ( id >= cars.length) {
+    //   return res.status(400)
+    //             .send(`${id} is greater than expected!`);
+    // }
+
+    // // return res.status(200)
+    // //           .send(`Welcome to the Cloud, ${id}!`);
+    // return res.status(200)
+    //           .send(`car[id: ` + cars[id].id 
+    //     + `, make: ` + cars[id].make 
+    //     + `, model: ` + cars[id].model
+    //     + `, type: ` + cars[id].type
+    //     + `, cost: ` + cars[id].cost
+    //     + `]`);
+  } );
 
   /// @TODO Add an endpoint to post a new car to our list
   // it should require id, type, model, and cost
+  app.post( "/cars", ( req: Request, res: Response ) => {
+    // destruct our body payload for our variables
+    let { make, type, model, cost, id } = req.body;
+    
+    // let { id } = req.body;
+    // let { type } = req.body;
+    // let { model } = req.body;
+    // let { cost } = req.body;
+    // let { make } = req.body;
+
+    // check to make sure all required variable are set
+    if (!id || !type || !model || !cost) {
+      // respond with an error if not
+      return res.status(400).send(`make, type, model, cost, id are required`);
+    }
+
+    // create a new car instance
+    const new_car: Car = {
+      make: make, type: type, model: model, cost: cost, id: id
+    };
+
+    // if ( !id ) {
+    //   return res.status(400)
+    //             .send(`id is required`);
+    // }
+
+    // if ( !type ) {
+    //   return res.status(400)
+    //             .send(`type is required`);
+    // }
+
+    // if ( !model ) {
+    //   return res.status(400)
+    //             .send(`model is required`);
+    // }
+
+    // if ( !cost ) {
+    //   return res.status(400)
+    //             .send(`cost is required`);
+    // }
+
+    // let my_car:Car;
+
+    // my_car.id = id;
+    // my_car.type = id;
+    // my_car.model = id;
+    // my_car.cost = id;
+    // my_car.make = make;
+
+    // cars[id] = my_car;
+
+    cars.push(new_car);
+
+    return res.status(201).send(new_car);
+  } );
 
   // Start the Server
   app.listen( port, () => {
